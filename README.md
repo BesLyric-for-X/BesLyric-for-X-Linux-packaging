@@ -6,7 +6,7 @@ The script(s) in this repository are used to deploy and package BesLyric-for-X o
 
 ## Environment
 
-Ubuntu 16.04
+Ubuntu 18.04.5
 
 ## Dependent libraries
 
@@ -38,16 +38,12 @@ apt install -y \
 
 See also [Not all the dependencies are installed. · Issue #88 · jurplel/install-qt-action](https://github.com/jurplel/install-qt-action/issues/88) .
 
-### OpenSSL 1.1.1
-
-Build from [source](https://www.openssl.org/source/) and don't install.
-
 ## Dependent tools
 
 These tools are required to complete the work:
 
 - Bash 4
-- linuxdeployqt 7 @ `d41e2345694e6d09820df66e5edb6e8c01db9fb9`
+- linuxdeployqt 7 @ `b4697483c98120007019c3456914cfd1dba58384`
 
 ## How to use
 
@@ -63,7 +59,6 @@ $ git clone https://github.com/BesLyric-for-X/BesLyric-for-X_Linux_deploy-packag
 
 ```shell
    DESKTOP_FILE_PATH='path/to/desktop/file/in/AppDir/usr/share/applications' \
-OPENSSL_LIB_DIR_PATH='path/to/dir/contains/libcrypto.so.1.1/and/libssl.so.1.1' \
   LINUXDEPLOYQT_PATH='path/to/linuxdeployqt' \
           QMAKE_PATH='path/to/qmake' \
              VERSION='will.be.added.to.AppImage.file.name' \
@@ -81,6 +76,49 @@ set -e           # Checking tons of $? is painful
 set -o pipefail  # Error will not disappear in the pipeline
 set -u           # Detect unbound variables
 ```
+
+## Q&A
+
+### Why don't we need to manually copy the library files of OpenSSL 1.1.1?
+
+We have the following dependency relationships:
+
+```console
+$ apt-cache depends ffmpeg
+ffmpeg
+  ...
+  Depends: libavformat58
+  ...
+
+$ apt-cache depends libavformat58
+libavformat58
+  ...
+  Depends: librabbitmq4
+  ...
+
+$ apt-cache depends librabbitmq4
+librabbitmq4
+  ...
+  Depends: libssl1.1
+```
+
+And the "libssl1.1" package contains the library files of version 1.1.1:
+
+```console
+$ apt-cache show libssl1.1
+Package: libssl1.1
+...
+Version: 1.1.1-1ubuntu2.1~18.04.9
+...
+
+$ dpkg -L libssl1.1
+...
+/usr/lib/x86_64-linux-gnu/libcrypto.so.1.1
+/usr/lib/x86_64-linux-gnu/libssl.so.1.1
+...
+```
+
+Hence, linuxdeployqt will deploy them into "AppDir/usr/lib".
 
 ## Credits
 
